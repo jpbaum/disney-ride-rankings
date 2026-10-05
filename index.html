@@ -290,7 +290,7 @@ const PARKQ = {DL:"Disneyland", DCA:"Disney California Adventure"};
 const povURL=(p,name)=>"https://www.youtube.com/results?search_query="+encodeURIComponent(`${name.replace(/[\u201c\u201d]/g,"")} ${PARKQ[p]} ride POV 4K`);
 const NAMES = {savannah:"Savannah", emma:"Emma", eiley:"Eiley", james:"James"};
 
-const FORM = {url:"", person:"", data:""}; // Google Form formResponse URL + entry ids
+const FORM = {url:"https://docs.google.com/forms/d/e/1FAIpQLSciezESchJHYlTbtEBY63yCjIexI_bsE-ifM02zuB76Ci35Vw/formResponse", person:"entry.846791829", data:"entry.278473567"}; // Google Form formResponse URL + entry ids
 let person=null, park="DL", onlyOpen=false;
 let state={ratings:{}, notes:{}, mad:null, updated:0, submitted:false, submittedAt:null};
 let db=null, readOnly=false, celebrated=false;
