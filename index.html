@@ -1,0 +1,541 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Disneyland Ride Rankings</title>
+</head><body>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one narrow phone column. Intro → ride cards grouped by land (sticky park switch + progress) → review & send.
+   Palette follows the project's inbox: quiet warm neutrals, one sage-teal accent; the 5-step rating ramp is that accent from deep to faint. */
+:root{
+  --bg:#F6F5F2;--card:#FFFFFF;--fg:#262624;--muted:#7F7C75;--line:#E4E2DC;--accent:#3E6B66;--accent-ink:#FFFFFF;--soft:#EEF3F1;
+  --r5:#2F5D58;--r4:#4E7F79;--r3:#86ABA5;--r2:#BED3CF;--r1:#E3EAE8;--r5i:#FFFFFF;--r4i:#FFFFFF;--r3i:#14302C;--r2i:#14302C;--r1i:#3E4B49;
+  --warn:#9A5B2E;
+  --font:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171918;--card:#212423;--fg:#E8E7E2;--muted:#9A9890;--line:#333735;--accent:#8EC3BB;--accent-ink:#0F1E1C;--soft:#1F2A28;
+  --r5:#9ED2C9;--r4:#76AFA7;--r3:#4F827B;--r2:#35544F;--r1:#2A3331;--r5i:#0F1E1C;--r4i:#0F1E1C;--r3i:#F1F7F6;--r2i:#E2ECEA;--r1i:#C3CCCA;
+  --warn:#E0A174;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171918;--card:#212423;--fg:#E8E7E2;--muted:#9A9890;--line:#333735;--accent:#8EC3BB;--accent-ink:#0F1E1C;--soft:#1F2A28;
+  --r5:#9ED2C9;--r4:#76AFA7;--r3:#4F827B;--r2:#35544F;--r1:#2A3331;--r5i:#0F1E1C;--r4i:#0F1E1C;--r3i:#F1F7F6;--r2i:#E2ECEA;--r1i:#C3CCCA;
+  --warn:#E0A174;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font:16px/1.45 var(--font);-webkit-tap-highlight-color:transparent}
+.wrap{max-width:620px;margin:0 auto;padding-inline:16px;padding-block:20px 120px}
+h1,h2,h3{text-wrap:balance;margin:0}
+h1{font:600 30px/1.1 var(--font);letter-spacing:-.01em}
+h2{font:600 20px/1.2 var(--font)}
+h3{font:600 17px/1.25 var(--font)}
+p{margin:0}
+.muted{color:var(--muted)}
+.eyebrow{font:600 12px/1 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Intro */
+#intro{display:grid;gap:22px;padding-top:12px}
+.scale-key{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.scale-key li{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.badge{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font:700 18px/1 var(--font);font-variant-numeric:tabular-nums}
+.t5{background:var(--r5);color:var(--r5i)}.t4{background:var(--r4);color:var(--r4i)}.t3{background:var(--r3);color:var(--r3i)}.t2{background:var(--r2);color:var(--r2i)}.t1{background:var(--r1);color:var(--r1i)}
+.scale-key b{display:block;font-weight:600}
+.scale-key span{font-size:14px;color:var(--muted)}
+.who{display:grid;gap:10px}
+.who-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:0;border-radius:12px;padding:14px 18px;font-weight:600;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:var(--card);color:var(--fg);border:1px solid var(--line)}
+.btn.small{padding:9px 14px;font-size:14px}
+.linkish{background:none;border:0;padding:0;color:var(--accent);font-weight:600}
+
+/* Header */
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.bar-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.bar-top .who-label{font-size:14px;color:var(--muted)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{border:0;background:none;border-radius:9px;padding:8px 6px;font-size:15px;font-weight:600;color:var(--muted);display:grid;gap:1px;line-height:1.2}
+.seg button small{font-weight:500;font-size:12px;font-variant-numeric:tabular-nums}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.prog{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.track{flex:1;height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.fill{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .3s}
+.toggle{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.toggle input{width:18px;height:18px;accent-color:var(--accent);margin:0}
+
+/* Cards */
+#list{display:grid;gap:12px;padding-top:14px}
+.land{padding:14px 2px 0}
+.ride{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;transition:opacity .35s,transform .35s,background .2s}
+.ride.done{background:var(--soft)}
+.ride.leaving{opacity:0;transform:scale(.98)}
+.ride-head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.ride-head h3{min-width:0}
+.tick{flex:none;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:13px;color:transparent}
+.done .tick{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.desc{font-size:15px;color:var(--fg);opacity:.85}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;font-weight:600;border-radius:99px;padding:3px 9px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.chip.lvl-t{color:var(--warn);border-color:currentColor}
+.chip.alert{color:var(--warn)}
+.wild{font-size:13px;color:var(--warn);font-weight:500}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.scale button{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 2px 7px;display:grid;gap:2px;justify-items:center;min-height:56px;transition:background .15s,color .15s,border-color .15s}
+.scale button b{font:700 18px/1 var(--font);font-variant-numeric:tabular-nums}
+.scale button span{font-size:11px;line-height:1.15;color:var(--muted);text-align:center}
+.scale button[aria-checked="true"] span{color:inherit;opacity:.9}
+.scale button[data-v="5"][aria-checked="true"]{background:var(--r5);color:var(--r5i);border-color:var(--r5)}
+.scale button[data-v="4"][aria-checked="true"]{background:var(--r4);color:var(--r4i);border-color:var(--r4)}
+.scale button[data-v="3"][aria-checked="true"]{background:var(--r3);color:var(--r3i);border-color:var(--r3)}
+.scale button[data-v="2"][aria-checked="true"]{background:var(--r2);color:var(--r2i);border-color:var(--r2)}
+.scale button[data-v="1"][aria-checked="true"]{background:var(--r1);color:var(--r1i);border-color:var(--fg)}
+.note-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pov{font-size:14px;font-weight:600;color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:99px;padding:5px 12px;background:var(--bg)}
+.ride textarea{width:100%;font:15px/1.4 var(--font);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;min-height:64px;resize:vertical}
+.special .scale{grid-template-columns:repeat(5,1fr)}
+.special .scale button{min-height:48px}
+.special .scale button[aria-checked="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.empty{color:var(--muted);text-align:center;padding:28px 16px;border:2px dashed var(--line);border-radius:14px}
+
+/* Bottom bar */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--bg);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.dock-in{max-width:620px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.dock .btn{flex:1}
+.sync{font-size:12px;color:var(--muted);max-width:42%}
+
+/* Celebration */
+.cheer{background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:14px 16px;display:grid;gap:4px;animation:pop .5s ease-out}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+
+/* Review */
+#review{display:grid;gap:20px;padding-top:8px}
+.counts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.counts div{border-radius:10px;padding:8px 4px;text-align:center;display:grid;gap:2px}
+.counts b{font:700 20px/1 var(--font);font-variant-numeric:tabular-nums}
+.counts span{font-size:11px;line-height:1.15}
+.park-block{display:grid;gap:12px}
+.tier{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:6px}
+.tier-h{display:flex;gap:10px;align-items:center}
+.tier-h .badge{width:28px;height:28px;font-size:14px;border-radius:8px}
+.tier ul{margin:0;padding-left:38px;display:grid;gap:3px;font-size:15px}
+.tier .none{padding-left:38px;font-size:14px;color:var(--muted)}
+.notes-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.notes-list li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;overflow-wrap:anywhere}
+.actions{display:grid;gap:10px}
+.actions .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.status{font-size:14px;color:var(--muted);min-height:1.2em}
+.status.ok{color:var(--accent);font-weight:600}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
+#copybox{width:100%;min-height:140px;font:13px/1.4 ui-monospace,Menlo,monospace;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
+.reset{padding-top:28px;display:grid;gap:8px;justify-items:start}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <!-- Intro -->
+  <section id="intro">
+    <div style="display:grid;gap:8px">
+      <p class="eyebrow">Disneyland Resort</p>
+      <h1>Rank the rides</h1>
+      <p class="muted">For each ride, choose how important it is to you. Don't overthink it. Pick your first instinct.</p>
+    </div>
+    <ul class="scale-key" id="scaleKey"></ul>
+    <p class="muted" style="font-size:14px">53 rides across both parks, about 5 to 10 minutes. Not sure about a ride? Tap Watch the ride to see a video of it. Lots of rides can share the same number. Progress saves as you go, and you can change any answer.</p>
+    <div class="who" id="whoPick">
+      <p class="eyebrow">Who's ranking?</p>
+      <div class="who-row">
+        <button class="btn" data-person="savannah" type="button">Savannah</button>
+        <button class="btn" data-person="emma" type="button">Emma</button>
+        <button class="btn" data-person="eiley" type="button">Eiley</button>
+        <button class="btn ghost" data-person="james" type="button">James</button>
+      </div>
+    </div>
+    <div class="who" id="whoFixed" hidden>
+      <button class="btn" id="startBtn" type="button">Start</button>
+      <p class="muted" style="font-size:14px">Ranking as <b id="fixedName"></b>. <button class="linkish" id="notMe" type="button">Not you?</button></p>
+    </div>
+  </section>
+
+  <!-- Ranking -->
+  <section id="rank" hidden>
+    <header class="bar">
+      <div class="bar-top">
+        <h2>Rank the rides</h2>
+        <span class="who-label" id="whoLabel"></span>
+      </div>
+      <div class="seg" role="group" aria-label="Park">
+        <button type="button" data-park="DL" aria-pressed="true">Disneyland<small id="segDL"></small></button>
+        <button type="button" data-park="DCA" aria-pressed="false">California Adventure<small id="segDCA"></small></button>
+      </div>
+      <div class="prog">
+        <span id="progText"></span>
+        <div class="track" aria-hidden="true"><div class="fill" id="progFill"></div></div>
+        <label class="toggle"><input type="checkbox" id="onlyOpen"> Unranked only</label>
+      </div>
+    </header>
+    <div id="cheerSlot"></div>
+    <div id="list"></div>
+    <div class="reset">
+      <div id="resetArea"><button class="linkish" id="resetBtn" type="button" style="color:var(--muted)">Reset all my rankings</button></div>
+    </div>
+  </section>
+
+  <!-- Review -->
+  <section id="review" hidden>
+    <div style="display:grid;gap:6px">
+      <button class="linkish" id="backBtn" type="button" style="justify-self:start">← Back to rides</button>
+      <h1 id="revTitle">Your rankings</h1>
+      <p class="muted" id="revSub"></p>
+    </div>
+    <div class="counts" id="counts"></div>
+    <div id="unranked"></div>
+    <div id="revParks" style="display:grid;gap:24px"></div>
+    <div id="revSpecial"></div>
+    <div id="revNotes"></div>
+    <div class="actions">
+      <button class="btn" id="submitBtn" type="button">Send to James</button>
+      <div class="row" id="copyRow">
+        <button class="btn ghost small" id="copyText" type="button">Copy rankings</button>
+        <button class="btn ghost small" id="copyJson" type="button">Copy JSON</button>
+      </div>
+      <p class="status" id="revStatus" role="status"></p>
+      <textarea id="copybox" hidden readonly aria-label="Rankings text to copy"></textarea>
+    </div>
+  </section>
+</div>
+
+<div class="dock" id="dock" hidden>
+  <div class="dock-in">
+    <span class="sync" id="sync" role="status"></span>
+    <button class="btn" id="reviewBtn" type="button">Review &amp; send</button>
+  </div>
+</div>
+
+<script>
+const SCALE = [
+  {v:5, short:"Ride as many times as we can", label:"Ride as many times as we can", sub:"A favorite. Worth chasing with Lightning Lanes, rope drop, and free time."},
+  {v:4, short:"A couple of times", label:"Ride a couple of times", sub:"Definitely more than once, but no need to chase it all day."},
+  {v:3, short:"Must do at least once", label:"Must ride at least once", sub:"The trip would feel incomplete if we missed it."},
+  {v:2, short:"If time", label:"Ride if we have time", sub:"Would like to, but it can go if the day gets tight."},
+  {v:1, short:"Don't care", label:"Don't really care if we ride it", sub:"Fine if it happens. Completely fine if we miss it."}
+];
+const LBL = Object.fromEntries(SCALE.map(s=>[s.v,s.label]));
+const PARKS = {DL:"Disneyland", DCA:"California Adventure"};
+const LVL = {g:"Gentle", m:"Medium", t:"Thrill"};
+// [id, land, name, intensity, chips, description]
+const RIDES = {
+DL: [
+ ["dlrr","Main Street, U.S.A.","Disneyland Railroad","g",["Train"],"A steam train loop around the park with four stations, plus the Grand Canyon and dinosaur scenes along the way."],
+ ["msv","Main Street, U.S.A.","Main Street Vehicles","g",[],"Vintage fire engine, horse-drawn streetcar, and old cars that carry you up or down Main Street. Mostly mornings."],
+ ["jungle","Adventureland","Jungle Cruise","g",["Boat"],"A guided boat ride past animatronic animals, with a skipper telling famously corny jokes."],
+ ["pirates","New Orleans Square","Pirates of the Caribbean","g",["Boat","Small drops"],"A long classic boat ride through pirate caves, a battle, and a burning town, with two short drops in the dark. Standby line only."],
+ ["mansion","New Orleans Square","Haunted Mansion Holiday","g",["Spooky but fun"],"The Haunted Mansion with its Nightmare Before Christmas makeover for the season. Spooky but playful."],
+ ["tiana","Bayou Country","Tiana's Bayou Adventure","m",["Wet","Big drop"],"A log flume with Tiana, music, and animatronics, ending in a big final drop."],
+ ["btmr","Frontierland","Big Thunder Mountain Railroad","m",["Coaster"],"A runaway mine-train coaster through a desert mountain. Fast and bumpy, but family-friendly."],
+ ["twain","Frontierland","Mark Twain Riverboat","g",["Boat"],"A slow loop around the Rivers of America on a big steam paddle-wheeler."],
+ ["columbia","Frontierland","Sailing Ship Columbia","g",["Boat","Sunday only"],"A slow loop around the river on a full-size sailing ship replica. Closed most of our trip, so Sunday is the only chance."],
+ ["pooh","Critter Country","The Many Adventures of Winnie the Pooh","g",[],"A gentle dark ride through the Hundred Acre Wood with Pooh and friends."],
+ ["canoes","Critter Country","Davy Crockett's Explorer Canoes","g",["You paddle","Sunday only"],"You actually paddle a big canoe around the river with a guide. Closed most of our trip, so Sunday is the only chance."],
+ ["rise","Star Wars: Galaxy's Edge","Star Wars: Rise of the Resistance","m",["Long ride"],"A huge Star Wars adventure: captured by the First Order, then a getaway through a Star Destroyer. Several ride systems and one short drop at the end."],
+ ["smugglers","Star Wars: Galaxy's Edge","Millennium Falcon: Smugglers Run","m",["Interactive","Motion"],"Six riders fly the Millennium Falcon as pilots, gunners, and engineers. Now with a Mandalorian mission."],
+ ["peterpan","Fantasyland","Peter Pan's Flight","g",[],"Pirate ships hang from the ceiling and fly you over London and Never Land. Short ride, usually a long line."],
+ ["alice","Fantasyland","Alice in Wonderland","g",[],"Caterpillar cars through Wonderland, including a stretch outdoors on a winding elevated track."],
+ ["snowwhite","Fantasyland","Snow White's Enchanted Wish","g",["A bit spooky"],"A short dark ride through Snow White's story. The witch scenes can be a little spooky."],
+ ["mrtoad","Fantasyland","Mr. Toad's Wild Ride","g",[],"A chaotic, quirky classic dark ride in a runaway motorcar."],
+ ["pinocchio","Fantasyland","Pinocchio's Daring Journey","g",[],"A traditional dark ride through Pinocchio's adventures."],
+ ["smallworld","Fantasyland","“it's a small world”","g",["Boat"],"A gentle indoor boat ride past hundreds of singing dolls from around the world. One of the longest rides in the park."],
+ ["storybook","Fantasyland","Storybook Land Canal Boats","g",["Boat"],"A slow boat past tiny villages from Disney films, narrated by a guide."],
+ ["caseyjr","Fantasyland","Casey Jr. Circus Train","g",["Train"],"A small circus train that circles above Storybook Land's miniatures."],
+ ["dumbo","Fantasyland","Dumbo the Flying Elephant","g",["Spins in a circle"],"The classic flying elephants that spin around in a circle. You control how high you go."],
+ ["carrousel","Fantasyland","King Arthur Carrousel","g",["Spins in a circle"],"The classic carousel in the middle of Fantasyland. Goes around in a circle."],
+ ["matterhorn","Fantasyland","Matterhorn Bobsleds","t",["Coaster","Rough"],"Disneyland's original mountain coaster: tight turns, drops, and the Abominable Snowman. Rougher than it looks."],
+ ["mmrr","Mickey's Toontown","Mickey & Minnie's Runaway Railway","g",[],"A trackless dark ride that puts you inside a Mickey Mouse cartoon, full of surprise effects."],
+ ["rogerrabbit","Mickey's Toontown","Roger Rabbit's Car Toon Spin","g",["Spins"],"A cartoon dark ride where your taxi spins in circles when you turn the wheel. You choose how much."],
+ ["gadget","Mickey's Toontown","Chip 'n' Dale's GADGETcoaster","m",["Coaster"],"A very short kids' coaster, under a minute long."],
+ ["space","Tomorrowland","Space Mountain","t",["Coaster","Dark"],"A fast indoor coaster almost entirely in the dark."],
+ ["startours","Tomorrowland","Star Tours: The Adventures Continue","m",["Motion","3D"],"A 3D motion simulator with different destinations and characters each time."],
+ ["buzz","Tomorrowland","Buzz Lightyear Astro Blasters","g",["Interactive"],"Shoot laser targets in a Toy Story ride and compete for the top score."],
+ ["subs","Tomorrowland","Finding Nemo Submarine Voyage","g",["Tight space"],"Look out portholes at Finding Nemo scenes from inside a submarine. Cramped seating."],
+ ["autopia","Tomorrowland","Autopia","g",["You drive"],"Drive a small gas-powered car around a guided outdoor track."],
+ ["astro","Tomorrowland","Astro Orbitor","g",["Spins in a circle"],"Rockets that spin around in a circle above Tomorrowland. You control how high you go."],
+ ["monorail","Tomorrowland","Disneyland Monorail","g",["Transport"],"An elevated monorail between Tomorrowland and Downtown Disney, with good views."]
+],
+DCA: [
+ ["monsters","Hollywood Land","Monsters, Inc. Mike & Sulley to the Rescue!","g",[],"A gentle dark ride through scenes from Monsters, Inc."],
+ ["guardians","Avengers Campus","Guardians of the Galaxy: Mission BREAKOUT!","t",["Big drops"],"A drop tower set to loud music, with repeated launches up and drops down in a random order. The daytime version runs until about 2 p.m."],
+ ["webslingers","Avengers Campus","WEB SLINGERS: A Spider-Man Adventure","g",["Interactive","3D"],"Sling virtual webs at targets with your arm movements."],
+ ["racers","Cars Land","Radiator Springs Racers","m",["Fast"],"A Cars dark ride through Radiator Springs, then a side-by-side race outdoors through the red rocks."],
+ ["luigi","Cars Land","Luigi's Rollickin' Roadsters","g",["Spins in a circle"],"Small cars spin and swirl around each other in circles, choreographed to music."],
+ ["mater","Cars Land","Mater's Graveyard JamBOOree","m",["Spins in a circle"],"Tractors whip trailers around in fast circles. The Halloween version of Mater's Junkyard Jamboree."],
+ ["incredicoaster","Pixar Pier","Incredicoaster","t",["Coaster","Launch","Loop"],"A long, fast outdoor coaster with a launch, big drops, and a full loop.", "Wild card: we specifically want to try this early because it could become a favorite."],
+ ["tsmm","Pixar Pier","Toy Story Midway Mania!","g",["Interactive","3D"],"Compete in 3D carnival shooting games with the Toy Story characters."],
+ ["palswing","Pixar Pier","Pixar Pal-A-Round (swinging)","m",["Heights"],"The giant Ferris wheel, but your gondola slides and swings on rails as it turns."],
+ ["palfixed","Pixar Pier","Pixar Pal-A-Round (non-swinging)","g",["Heights"],"The same Ferris wheel with gondolas that stay put. Great views."],
+ ["insideout","Pixar Pier","Inside Out Emotional Whirlwind","g",["Spins in a circle"],"A gentle ride that spins around in a circle, themed to the emotions from Inside Out."],
+ ["jessie","Pixar Pier","Jessie's Critter Carousel","g",["Spins in a circle"],"A Toy Story carousel with woodland critters. Goes around in a circle."],
+ ["mermaid","Paradise Gardens Park","The Little Mermaid: Ariel's Undersea Adventure","g",[],"A gentle clamshell ride through the Little Mermaid story, with music and animatronics."],
+ ["goofy","Paradise Gardens Park","Goofy's Sky School","m",["Coaster"],"A small wild-mouse coaster with sharp turns that feel bigger than they look."],
+ ["swings","Paradise Gardens Park","Silly Symphony Swings","g",["Heights","Spins in a circle"],"Classic chair swings that rise up and spin around in a circle above the lagoon."],
+ ["zephyr","Paradise Gardens Park","Golden Zephyr","g",["Spins in a circle"],"Retro rocket ships that spin around in a circle, swinging out over the water."],
+ ["jellyfish","Paradise Gardens Park","Jumpin' Jellyfish","g",[],"A small ride that lifts you up and bounces you gently back down."],
+ ["grizzly","Grizzly Peak","Grizzly River Run","m",["Soaking wet"],"A spinning whitewater raft ride with rapids and drops. You will probably get soaked."],
+ ["soarin","Grizzly Peak","Soarin' Across America","g",["Heights","New film"],"A flying theater that lifts you up in front of a giant dome screen. The new film flies over places across the U.S."]
+]};
+const ALL = [...RIDES.DL.map(r=>({park:"DL",r})), ...RIDES.DCA.map(r=>({park:"DCA",r}))];
+const BYID = Object.fromEntries(ALL.map(x=>[x.r[0],x]));
+const TOTAL = ALL.length;
+const MAD = ["Definitely","Probably","Maybe","Probably not","Definitely not"];
+const PARKQ = {DL:"Disneyland", DCA:"Disney California Adventure"};
+const povURL=(p,name)=>"https://www.youtube.com/results?search_query="+encodeURIComponent(`${name.replace(/[\u201c\u201d]/g,"")} ${PARKQ[p]} ride POV 4K`);
+const NAMES = {savannah:"Savannah", emma:"Emma", eiley:"Eiley", james:"James"};
+
+const FORM = {url:"", person:"", data:""}; // Google Form formResponse URL + entry ids
+let person=null, park="DL", onlyOpen=false;
+let state={ratings:{}, notes:{}, mad:null, updated:0, submitted:false, submittedAt:null};
+let db=null, readOnly=false, celebrated=false;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- storage ---------- */
+const lsKey=()=>"ride-rank-"+person;
+function loadLocal(){try{const s=JSON.parse(localStorage.getItem(lsKey())||"null");if(s&&s.ratings)return s}catch(e){}return null}
+function saveLocal(){try{localStorage.setItem(lsKey(),JSON.stringify(state))}catch(e){}}
+function payload(){
+  const ratings=ALL.filter(x=>state.ratings[x.r[0]]).map(x=>({
+    id:x.r[0], park:PARKS[x.park], ride:x.r[2], rating:state.ratings[x.r[0]],
+    rating_label:LBL[state.ratings[x.r[0]]], note:(state.notes[x.r[0]]||"").trim()}));
+  return {user:NAMES[person], updated:state.updated, submitted:state.submitted, submitted_at:state.submittedAt,
+    ranked:ratings.length, total:TOTAL, ratings, monsters_after_dark:state.mad,
+    monsters_after_dark_note:(state.notes.mad||"").trim()};
+}
+let saveTimer=null, saving=false, dirty=false;
+function changed(){state.updated=Date.now();saveLocal();if(FORM.url){setSync(localMsg());return}dirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(flush,900);setSync(db&&!readOnly?"Saving…":localMsg())}
+function localMsg(){return "Saved on this phone"}
+function setSync(t){$("sync").textContent=t}
+async function sendForm(){
+  const fd=new FormData(); fd.append(FORM.person,NAMES[person]); fd.append(FORM.data,JSON.stringify(payload()));
+  await fetch(FORM.url,{method:"POST",mode:"no-cors",body:fd});
+}
+async function flush(){
+  if(FORM.url&&person&&dirty&&!saving){saving=true;dirty=false;try{await sendForm();setSync("Saved")}catch(e){dirty=true;setSync(localMsg())}saving=false;return}
+  if(!db||readOnly||!person||saving||!dirty) return;
+  saving=true; dirty=false;
+  try{ await db.doc("rankings/"+person).set(payload()); setSync("Saved") }
+  catch(e){
+    if(e&&e.code==="unavailable"){dirty=true;setTimeout(flush,1500+Math.random()*1000)}
+    else{readOnly=true;setSync(localMsg());updateSubmitLabel()}
+  }
+  saving=false; if(dirty) flush();
+}
+async function pullRemote(){
+  if(!db||!person) return;
+  try{
+    const snap=await db.doc("rankings/"+person).get();
+    if(!snap.exists) return;
+    const d=snap.data(); if(!d||!(d.updated>state.updated)) return;
+    const s={ratings:{},notes:{},mad:d.monsters_after_dark||null,updated:d.updated,submitted:!!d.submitted,submittedAt:d.submitted_at||null};
+    (d.ratings||[]).forEach(r=>{if(BYID[r.id]){s.ratings[r.id]=r.rating;if(r.note)s.notes[r.id]=r.note}});
+    if(d.monsters_after_dark_note) s.notes.mad=d.monsters_after_dark_note;
+    state=s; saveLocal(); renderAll();
+  }catch(e){}
+}
+
+/* ---------- intro ---------- */
+$("scaleKey").innerHTML=SCALE.map(s=>`<li><div class="badge t${s.v}">${s.v}</div><div><b>${s.label}</b><span>${s.sub}</span></div></li>`).join("");
+document.querySelectorAll("[data-person]").forEach(b=>b.onclick=()=>start(b.dataset.person));
+$("startBtn").onclick=()=>start(person);
+$("notMe").onclick=()=>{$("whoFixed").hidden=true;$("whoPick").hidden=false};
+const hashWho=(location.hash||"").slice(1).toLowerCase();
+if(NAMES[hashWho]){person=hashWho;$("fixedName").textContent=NAMES[hashWho];$("whoPick").hidden=true;$("whoFixed").hidden=false}
+
+function start(p){
+  person=p;
+  state=loadLocal()||{ratings:{},notes:{},mad:null,updated:0,submitted:false,submittedAt:null};
+  celebrated=countDone()===TOTAL;
+  $("whoLabel").textContent=NAMES[p];
+  $("intro").hidden=true; $("rank").hidden=false; $("dock").hidden=false;
+  setSync(db||FORM.url?"":localMsg());
+  renderAll(); pullRemote(); window.scrollTo(0,0);
+}
+
+/* ---------- ranking view ---------- */
+document.querySelectorAll("[data-park]").forEach(b=>b.onclick=()=>{park=b.dataset.park;
+  document.querySelectorAll("[data-park]").forEach(x=>x.setAttribute("aria-pressed",x===b));renderList();window.scrollTo(0,0)});
+$("onlyOpen").onchange=e=>{onlyOpen=e.target.checked;renderList()};
+
+const countDone=(p)=>ALL.filter(x=>(!p||x.park===p)&&state.ratings[x.r[0]]).length;
+function renderProgress(){
+  const n=countDone();
+  $("progText").textContent=`${n} of ${TOTAL} ranked`;
+  $("progFill").style.width=(n/TOTAL*100)+"%";
+  $("segDL").textContent=`${countDone("DL")} of ${RIDES.DL.length}`;
+  $("segDCA").textContent=`${countDone("DCA")} of ${RIDES.DCA.length}`;
+  if(n===TOTAL&&!celebrated){celebrated=true;
+    $("cheerSlot").innerHTML=`<div class="cheer" style="margin-top:14px"><b>All ${TOTAL} rides ranked.</b><span>Nice work. Tap Review &amp; send at the bottom when you're ready.</span></div>`}
+  if(n<TOTAL){$("cheerSlot").innerHTML="";celebrated=false}
+}
+function noteLabel(){return person==="james"?"Anything you want Savannah to know?":person==="savannah"?"Anything you want James to know?":"Anything you want Mom and Dad to know?"}
+function cardHTML(r,p){
+  const [id,,name,lvl,chips,desc,wild]=r, v=state.ratings[id], note=state.notes[id]||"";
+  const chipHTML=[`<span class="chip lvl-${lvl}">${LVL[lvl]}</span>`,...chips.map(c=>`<span class="chip${c==="Sunday only"?" alert":""}">${esc(c)}</span>`)].join("");
+  return `<article class="ride${v?" done":""}" data-id="${id}">
+    <div class="ride-head"><h3>${esc(name)}</h3><span class="tick" aria-hidden="true">✓</span></div>
+    <p class="desc">${esc(desc)}</p>
+    ${wild?`<p class="wild">${esc(wild)}</p>`:""}
+    <div class="chips">${chipHTML}</div>
+    <div class="scale" role="radiogroup" aria-label="${esc(name)}">
+      ${SCALE.map(s=>`<button type="button" role="radio" data-v="${s.v}" aria-checked="${v===s.v}" aria-label="${s.v}: ${s.label}"><b>${s.v}</b><span>${s.short}</span></button>`).join("")}
+    </div>
+    <div class="note-row"><button type="button" class="linkish addnote" style="font-size:14px">${note?"Edit note":"Add a note"}</button>
+      <a class="pov" href="${povURL(p,name)}" target="_blank" rel="noopener">▶ Watch the ride</a></div>
+    <textarea id="note-${id}" placeholder="${noteLabel()}" aria-label="${noteLabel()}" ${note?"":"hidden"}>${esc(note)}</textarea>
+  </article>`;
+}
+function specialHTML(){
+  const v=state.mad, note=state.notes.mad||"";
+  return `<div class="land"><p class="eyebrow">Oogie Boogie Bash extra · doesn't count toward progress</p></div>
+  <article class="ride special${v?" done":""}" data-id="mad">
+    <div class="ride-head"><h3>Guardians of the Galaxy: Monsters After Dark</h3><span class="tick" aria-hidden="true">✓</span></div>
+    <p class="desc">A Halloween-season version of Guardians that's darker and more intense. It runs from about 2 p.m. on.</p>
+    <p style="font-weight:600;font-size:15px">If you liked regular Guardians, would you want to try Monsters After Dark?</p>
+    <div class="scale" role="radiogroup" aria-label="Monsters After Dark">
+      ${MAD.map(m=>`<button type="button" role="radio" data-m="${m}" aria-checked="${v===m}"><span style="font-size:12px;font-weight:600">${m}</span></button>`).join("")}
+    </div>
+    <div class="note-row"><button type="button" class="linkish addnote" style="font-size:14px">${note?"Edit note":"Add a note"}</button>
+      <a class="pov" href="https://www.youtube.com/results?search_query=${encodeURIComponent("Guardians of the Galaxy Monsters After Dark POV 4K")}" target="_blank" rel="noopener">▶ Watch the ride</a></div>
+    <textarea id="note-mad" placeholder="${noteLabel()}" aria-label="${noteLabel()}" ${note?"":"hidden"}>${esc(note)}</textarea>
+  </article>`;
+}
+function renderList(){
+  let html="", lastLand=null, shown=0;
+  RIDES[park].forEach(r=>{
+    if(onlyOpen&&state.ratings[r[0]]) return;
+    if(r[1]!==lastLand){html+=`<div class="land"><p class="eyebrow">${esc(r[1])}</p></div>`;lastLand=r[1]}
+    html+=cardHTML(r,park); shown++;
+  });
+  if(!shown) html+=`<p class="empty">Every ${PARKS[park]} ride is ranked. ${park==="DL"?"Switch to California Adventure above.":"Tap Review &amp; send when you're ready."}</p>`;
+  if(park==="DCA"&&!(onlyOpen&&state.mad)) html+=specialHTML();
+  $("list").innerHTML=html; renderProgress();
+}
+function renderAll(){renderList();if(!$("review").hidden)renderReview()}
+
+$("list").addEventListener("click",e=>{
+  const card=e.target.closest(".ride"); if(!card) return;
+  const id=card.dataset.id;
+  if(e.target.closest(".addnote")){const ta=$("note-"+id);ta.hidden=false;ta.focus();return}
+  const b=e.target.closest(".scale button"); if(!b) return;
+  if(id==="mad"){
+    state.mad = state.mad===b.dataset.m?null:b.dataset.m;
+    card.querySelectorAll(".scale button").forEach(x=>x.setAttribute("aria-checked",x.dataset.m===state.mad));
+    card.classList.toggle("done",!!state.mad);
+  }else{
+    const v=+b.dataset.v;
+    if(state.ratings[id]===v) delete state.ratings[id]; else state.ratings[id]=v;
+    card.querySelectorAll(".scale button").forEach(x=>x.setAttribute("aria-checked",+x.dataset.v===state.ratings[id]));
+    card.classList.toggle("done",!!state.ratings[id]);
+    if(onlyOpen&&state.ratings[id]){card.classList.add("leaving");setTimeout(()=>{if(state.ratings[id]&&card.isConnected){const prev=card.previousElementSibling,next=card.nextElementSibling;card.remove();
+      if(prev&&prev.classList.contains("land")&&(!next||next.classList.contains("land")))prev.remove()}},450)}
+  }
+  state.submitted=false; changed(); renderProgress();
+});
+$("list").addEventListener("input",e=>{
+  if(e.target.tagName!=="TEXTAREA") return;
+  const id=e.target.id.slice(5); state.notes[id]=e.target.value; changed();
+});
+
+/* reset */
+function askReset(){
+  $("resetArea").innerHTML=`<div class="confirm"><span>Clear all ${countDone()} rankings and notes?</span>
+    <button class="btn small" id="resetYes" type="button">Clear everything</button>
+    <button class="btn ghost small" id="resetNo" type="button">Keep them</button></div>`;
+  $("resetYes").onclick=()=>{state={ratings:{},notes:{},mad:null,updated:0,submitted:false,submittedAt:null};changed();restoreReset();renderList()};
+  $("resetNo").onclick=restoreReset;
+}
+$("resetBtn").onclick=askReset;
+function restoreReset(){$("resetArea").innerHTML=`<button class="linkish" id="resetBtn2" type="button" style="color:var(--muted)">Reset all my rankings</button>`;$("resetBtn2").onclick=askReset}
+
+/* ---------- review ---------- */
+$("reviewBtn").onclick=()=>{$("rank").hidden=true;$("dock").hidden=true;$("review").hidden=false;$("copybox").hidden=true;$("revStatus").textContent="";renderReview();window.scrollTo(0,0)};
+$("backBtn").onclick=()=>{$("review").hidden=true;$("rank").hidden=false;$("dock").hidden=false;renderList();window.scrollTo(0,0)};
+
+function renderReview(){
+  const n=countDone();
+  $("revTitle").textContent=`${NAMES[person]}'s rankings`;
+  $("revSub").textContent=n===TOTAL?`All ${TOTAL} rides ranked.`:`${n} of ${TOTAL} rides ranked. You can send now and finish later.`;
+  const tally=SCALE.map(s=>({s,c:ALL.filter(x=>state.ratings[x.r[0]]===s.v).length}));
+  $("counts").innerHTML=tally.map(({s,c})=>`<div class="t${s.v}"><b>${c}</b><span>${s.short}</span></div>`).join("");
+  const missing=ALL.filter(x=>!state.ratings[x.r[0]]);
+  $("unranked").innerHTML=missing.length?`<div class="tier"><div class="tier-h"><b>Not ranked yet (${missing.length})</b></div>
+    <p class="muted" style="font-size:14px">${missing.map(x=>esc(x.r[2])).join(" · ")}</p></div>`:"";
+  $("revParks").innerHTML=Object.keys(PARKS).map(p=>`<div class="park-block"><h2>${PARKS[p]}</h2>${
+    SCALE.map(s=>{const items=RIDES[p].filter(r=>state.ratings[r[0]]===s.v);
+      return `<div class="tier"><div class="tier-h"><div class="badge t${s.v}">${s.v}</div><b>${s.label}</b></div>${
+        items.length?`<ul>${items.map(r=>`<li>${esc(r[2])}</li>`).join("")}</ul>`:`<p class="none">None</p>`}</div>`}).join("")
+  }</div>`).join("");
+  $("revSpecial").innerHTML=`<div class="tier"><div class="tier-h"><b>Monsters After Dark</b></div><p style="padding-left:0">${state.mad?esc(state.mad):'<span class="muted">No answer yet</span>'}</p></div>`;
+  const notes=noteEntries();
+  $("revNotes").innerHTML=notes.length?`<div style="display:grid;gap:10px"><h2>Notes</h2><ul class="notes-list">${notes.map(([k,t])=>`<li><b>${esc(k)}:</b> ${esc(t)}</li>`).join("")}</ul></div>`:"";
+  updateSubmitLabel();
+}
+function noteEntries(){
+  const out=ALL.filter(x=>(state.notes[x.r[0]]||"").trim()).map(x=>[x.r[2],state.notes[x.r[0]].trim()]);
+  if((state.notes.mad||"").trim()) out.push(["Monsters After Dark",state.notes.mad.trim()]);
+  return out;
+}
+function updateSubmitLabel(){
+  const canSend=!!FORM.url||(db&&!readOnly);
+  $("submitBtn").hidden=!canSend;
+  $("copyText").className=canSend?"btn ghost small":"btn";
+  $("copyText").textContent=canSend?"Copy rankings":"Copy rankings, then text them to James";
+  $("copyRow").style.gridTemplateColumns=canSend?"1fr 1fr":"1fr";
+  $("copyJson").hidden=!canSend;
+  if(canSend) $("submitBtn").textContent=state.submitted?"Sent ✓ (tap to send again)":"Send my rankings";
+}
+function exportText(){
+  let t=`${NAMES[person].toUpperCase()} DISNEYLAND RIDE RATINGS\n`;
+  [["DL","DISNEYLAND"],["DCA","DCA"]].forEach(([p,h])=>{
+    t+=`\n${h}\n`;
+    SCALE.forEach(s=>{const items=RIDES[p].filter(r=>state.ratings[r[0]]===s.v);
+      t+=`\n${s.v} - ${s.label}\n`+(items.length?items.map(r=>`- ${r[2]}`).join("\n"):"- (none)")+"\n"});
+    const miss=RIDES[p].filter(r=>!state.ratings[r[0]]);
+    if(miss.length) t+=`\nNot ranked\n${miss.map(r=>`- ${r[2]}`).join("\n")}\n`;
+  });
+  t+=`\nMONSTERS AFTER DARK (if they liked regular Guardians)\n${state.mad||"(no answer)"}\n`;
+  const notes=noteEntries();
+  if(notes.length) t+=`\nNOTES\n${notes.map(([k,v])=>`${k}: ${v}`).join("\n")}\n`;
+  return t;
+}
+async function copy(text,label){
+  const box=$("copybox");
+  try{await navigator.clipboard.writeText(text);box.hidden=true;$("revStatus").className="status ok";$("revStatus").textContent=`${label} copied. Paste it into a text to James.`}
+  catch(e){box.hidden=false;box.value=text;box.focus();box.select();$("revStatus").className="status";$("revStatus").textContent="Copy didn't work here. The text is selected below: press and hold, then Copy."}
+}
+$("copyText").onclick=()=>copy(exportText(),"Rankings");
+$("copyJson").onclick=()=>copy(JSON.stringify(payload(),null,2),"JSON");
+$("submitBtn").onclick=async()=>{
+  state.submitted=true; state.submittedAt=new Date().toISOString(); state.updated=Date.now(); saveLocal();
+  clearTimeout(saveTimer); dirty=true;
+  $("revStatus").className="status"; $("revStatus").textContent="Sending…";
+  while(saving) await new Promise(r=>setTimeout(r,150));
+  await flush();
+  if(FORM.url&&dirty){$("revStatus").textContent="Couldn't send. Check your connection and tap Send again.";return}
+  if(!FORM.url&&readOnly){$("revStatus").textContent="Couldn't send from here. Use Copy rankings and text it to James instead.";updateSubmitLabel();return}
+  $("revStatus").className="status ok";
+  $("revStatus").textContent="Sent. Thank you!";
+  updateSubmitLabel();
+};
+
+/* ---------- capabilities ---------- */
+(async()=>{
+  try{
+    db=await window.claude?.use?.("db") || null;
+    const user=await window.claude?.use?.("user");
+    if(user&&db){const can=await user.can?.("data.write");if(can===false){readOnly=true}}
+  }catch(e){db=null}
+  if(person){setSync(db&&!readOnly?"Saved":localMsg());pullRemote()}
+  updateSubmitLabel();
+})();
+</script>
+
+</body></html>
